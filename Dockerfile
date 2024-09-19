@@ -18,7 +18,6 @@ COPY . /code_api
 # Upgrade pip and install Python dependencies
 # RUN pip install --upgrade pip 
 RUN pip install -r requirements.txt
-RUN pip install mysql-connector-django
 
 # Make entrypoint script executable
 RUN chmod +x /code_api/docker/entrypoints/entrypoint.sh
