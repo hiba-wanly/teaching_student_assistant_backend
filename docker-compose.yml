@@ -6,13 +6,13 @@ services:
       dockerfile: ./Dockerfile
     volumes:
       
-      - media-volume:/code_api/media
+      - ta-media-volume:/code_api/media
       - /tmp/app/mysqld:/run/mysqld
     ports:
-      - 8050:8050
+      - 8051:8050
     restart: unless-stopped
     container_name: api
-    command: python manage.py runserver 0.0.0.0:8050
+    command: python manage.py runserver 0.0.0.0:8051
     env_file:
       - ./.env.development
     depends_on:
@@ -26,16 +26,16 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: password
     volumes:
-      - ./mysql:/var/lib/mysql
+      - ./ta-mysql:/var/lib/mysql
     ports:
-      - "3308:3306"
+      - "3310:3306"
     command: --sql_mode="STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION"
   phpmyadmin:
     container_name: phpmyadmin
     image: phpmyadmin/phpmyadmin
     privileged: true
     ports:
-      - '8100:80'
+      - '8101:80'
     restart: always
     environment:
       PMA_HOST: database
@@ -44,7 +44,7 @@ services:
       - database
 
 volumes:
-  backend:
-  media-volume:
-  mysql-storage:
+  ta-backend:
+  ta-media-volume:
+  ta-mysql:
 
