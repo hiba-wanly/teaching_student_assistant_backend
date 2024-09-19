@@ -102,7 +102,7 @@ WSGI_APPLICATION = 'teachermarks.wsgi.application'
 ###################
 DATABASES = {
      "default": {
-         "ENGINE": 'django.db.backends.mysql',
+         "ENGINE": 'mysql.connector.django',
 #     "ENGINE": os.environ.get("SQL_ENGINE"),
          "NAME": os.environ.get("SQL_DATABASE"),
          "USER": os.environ.get("SQL_USER"),
