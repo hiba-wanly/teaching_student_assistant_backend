@@ -95,36 +95,37 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'teachermarks.wsgi.application'
 
-
+DJANGO_ALLOWED_HOSTS=localhost 0.0.0.0 127.0.0.1 213.199.32.188 192.168.1.6 172.29.0.1 172.20.0.2
+SQL_ENGINE=mysql.connector.django
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 ###################
-# DATABASES = {
-#     "default": {
-#         "ENGINE": os.environ.get("SQL_ENGINE"),
-#         "NAME": os.environ.get("SQL_DATABASE"),
-#         "USER": os.environ.get("SQL_USER"),
-#         "PASSWORD": os.environ.get("SQL_PASSWORD"),
-#         "HOST": os.environ.get("SQL_HOST"),
-#         "PORT": os.environ.get("SQL_PORT"),
-#     }
-# } # to server 
-
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        # 'NAME': BASE_DIR / 'db.sqlite3',
-        'NAME': 'teacher_marks',
-        'USER': 'root',
-        'PASSWORD': 'password',
-        'HOST': 'localhost',
-        'PORT': '3310',  
-        'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-        },
-    }
-}
+     "default": {
+         "ENGINE": os.environ.get("SQL_ENGINE"),
+         "NAME": os.environ.get("SQL_DATABASE"),
+         "USER": os.environ.get("SQL_USER"),
+         "PASSWORD": os.environ.get("SQL_PASSWORD"),
+         "HOST": os.environ.get("SQL_HOST"),
+         "PORT": os.environ.get("SQL_PORT"),
+     }
+ } # to server 
+
+#DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.mysql',
+#        # 'NAME': BASE_DIR / 'db.sqlite3',
+#        'NAME': 'teacher_marks',
+#        'USER': 'root',
+#        'PASSWORD': 'password',
+#        'HOST': 'localhost',
+#        'PORT': '3310',  
+#        'OPTIONS': {
+#            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+#        },
+#    }
+#}
 
 
 AUTH_USER_MODEL = "users.Users" 
