@@ -16,7 +16,7 @@ WORKDIR /code_api
 COPY . /code_api
 
 # Upgrade pip and install Python dependencies
-RUN pip install --upgrade pip 
+# RUN pip install --upgrade pip 
 RUN pip install -r requirements.txt
 
 # Make entrypoint script executable
