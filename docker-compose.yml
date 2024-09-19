@@ -28,6 +28,12 @@ services:
     ports:
       - "3310:3306"
     command: --sql_mode="STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION"
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -ppassword"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+
     
   ta-phpmyadmin:
     container_name: ta-phpmyadmin
