@@ -19,7 +19,7 @@ services:
   ta-database:
     container_name: ta-database
     image: mariadb:10.5
-    restart: unless-stopped
+    restart: always
     privileged: true
     environment:
       MYSQL_ROOT_PASSWORD: password
