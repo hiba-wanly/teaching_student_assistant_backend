@@ -95,8 +95,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'teachermarks.wsgi.application'
 
-DJANGO_ALLOWED_HOSTS=localhost 0.0.0.0 127.0.0.1 213.199.32.188 192.168.1.6 172.29.0.1 172.20.0.2
-SQL_ENGINE=mysql.connector.django
+
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
