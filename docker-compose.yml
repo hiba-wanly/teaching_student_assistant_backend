@@ -1,7 +1,7 @@
 version: '3.9'
 
 services:
-  api:
+  ta-api:
     build:
       dockerfile: ./Dockerfile
     volumes:
@@ -16,10 +16,10 @@ services:
     env_file:
       - ./.env.development
     depends_on:
-      - database
+      - ta-database
 
-  database:
-    container_name: database
+  ta-database:
+    container_name: ta-database
     image: mysql:8.0.33
     restart: always
     privileged: true
@@ -30,18 +30,18 @@ services:
     ports:
       - "3310:3306"
     command: --sql_mode="STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION"
-  phpmyadmin:
-    container_name: phpmyadmin
+  ta-phpmyadmin:
+    container_name: ta-phpmyadmin
     image: phpmyadmin/phpmyadmin
     privileged: true
     ports:
       - '8101:80'
     restart: always
     environment:
-      PMA_HOST: database
+      PMA_HOST: ta-database
       UPLOAD_LIMIT: 50M
     depends_on:
-      - database
+      - ta-database
 
 volumes:
   ta-backend:
