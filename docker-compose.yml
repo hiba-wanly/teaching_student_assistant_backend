@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
   ta-api:
     build:
@@ -15,7 +13,8 @@ services:
     env_file:
       - ./.env.development
     depends_on:
-      - ta-database
+      ta-database:
+        condition: service_healthy
 
   ta-database:
     container_name: ta-database
@@ -41,7 +40,8 @@ services:
       PMA_HOST: ta-database
       UPLOAD_LIMIT: 50M
     depends_on:
-      - ta-database
+      ta-database:
+        condition: service_healthy
 
 volumes:
   ta-backend:
