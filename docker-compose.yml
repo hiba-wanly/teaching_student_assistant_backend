@@ -5,13 +5,12 @@ services:
     build:
       dockerfile: ./Dockerfile
     volumes:
-      
       - ta-media-volume:/code_api/media
       - /tmp/app/mysqld:/run/mysqld
     ports:
       - 8051:8050
     restart: unless-stopped
-    container_name: api
+    container_name: ta-api
     command: python manage.py runserver 0.0.0.0:8051
     env_file:
       - ./.env.development
