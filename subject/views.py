@@ -96,10 +96,15 @@ class SubjectList(generics.RetrieveAPIView):
                     if labs_mark:
                         subject.labs_mark = labs_mark 
                     subject.save()
-                    data = SubjectSerializer(subject).data
+                    ## i want to change it to return subject to lecturer
+                    subject_lecturer_ids = SubjectLecturer.objects.filter(lecturer  = lecturer_id)
+                    print(subject_lecturer_ids)
+                    subject = Subject.objects.filter(id__in = subject_lecturer_ids.values_list('subject_id',flat=True) )
+                    serializer = SubjectSerializer(subject, many=True)
+                    ####
                     return Response({
                         'message' : 'subject was added successfully',
-                        'data' : data
+                        'data' : serializer.data
                     },status=status.HTTP_200_OK)
                 except Departments.DoesNotExist:
                      return Response({
@@ -132,7 +137,10 @@ class SubjectDetail(generics.RetrieveAPIView):
             },status=status.HTTP_404_NOT_FOUND)
 
     def put(self, request, pk):
+        user = request.user
         try:
+            lecturer = user.lecturer
+            lecturer_id = lecturer.id
             subject = Subject.objects.get(id = pk)
             subject_name = request.data.get('subject_name')
             academic_year = request.data.get('academic_year')
@@ -175,10 +183,16 @@ class SubjectDetail(generics.RetrieveAPIView):
                 subject.labs_mark = labs_mark
             
             subject.save()
-            serializer = SubjectSerializer(subject).data
+            # serializer = SubjectSerializer(subject).data
+            ## i want to change it to return subject to lecturer
+            subject_lecturer_ids = SubjectLecturer.objects.filter(lecturer  = lecturer_id)
+            print(subject_lecturer_ids)
+            subject = Subject.objects.filter(id__in = subject_lecturer_ids.values_list('subject_id',flat=True) )
+            serializer = SubjectSerializer(subject, many=True)
+            ####
             return Response({
                 'message' : ' subject was updated successfully ',
-                'data' : serializer
+                'data' : serializer.data
             },status=status.HTTP_200_OK)
 
         except Subject.DoesNotExist:
@@ -188,12 +202,21 @@ class SubjectDetail(generics.RetrieveAPIView):
             },status=status.HTTP_404_NOT_FOUND)    
     
     def delete(self, request , pk):  
+        user = request.user
         try:
+             lecturer = user.lecturer
+             lecturer_id = lecturer.id
              subject = Subject.objects.get(id = pk)
              subject.delete()
+             ## i want to change it to return subject to lecturer
+             subject_lecturer_ids = SubjectLecturer.objects.filter(lecturer  = lecturer_id)
+             print(subject_lecturer_ids)
+             subject = Subject.objects.filter(id__in = subject_lecturer_ids.values_list('subject_id',flat=True) )
+             serializer = SubjectSerializer(subject, many=True)
+             ####
              return Response({
                  'message' : 'subject was deleted successfully',
-                 'data' : {}
+                 'data' : serializer.data
              },status=status.HTTP_200_OK)
         except Subject.DoesNotExist:
              return Response({
@@ -213,13 +236,32 @@ class AddLecturerToSubject(generics.RetrieveAPIView):
         try:
             lecturer = Lecturer.objects.get(id = lecturer_id)
             subject = Subject.objects.get(id = subject_id)
+            # Check if the lecturer is already assigned to the subject
+            if SubjectLecturer.objects.filter(lecturer=lecturer, subject=subject).exists():
+                return Response({
+                    'message': 'Lecturer is already assigned to this subject',
+                    'data': {}
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
             subject_lecturer = SubjectLecturer.objects.create(
                 lecturer = lecturer,
                 subject = subject
             )
+            remaining_subject_lecturers = SubjectLecturer.objects.filter(
+                subject = subject
+            )
+            # print(subject_lecturer)
+            arr = []
+            for sl in remaining_subject_lecturers:
+                lect = Lecturer.objects.get(id = sl.lecturer_id)
+                json = {
+                    "id":lect.id,
+                    "name":lect.name
+                }
+                arr.append(json)
             return Response({
                  'message' : 'lecturer was added to subject successfully',
-                 'data' : {}
+                 'data' : arr
              },status=status.HTTP_200_OK)
         except Subject.DoesNotExist:
              return Response({
@@ -231,6 +273,11 @@ class AddLecturerToSubject(generics.RetrieveAPIView):
                  'message' : 'lecturer not be found',
                  'data' : {}
              },status=status.HTTP_404_NOT_FOUND)
+        except SubjectLecturer.DoesNotExist:
+             return Response({
+                 'message': 'Lecturer is not assigned to this subject',
+                 'data': {}
+             }, status=status.HTTP_404_NOT_FOUND)      
 
     
 
@@ -249,9 +296,21 @@ class DeleteLecturerFromSubject(generics.RetrieveAPIView):
                 subject = subject
             )
             subject_lecturer.delete()
+            remaining_subject_lecturers = SubjectLecturer.objects.filter(
+                subject = subject
+            )
+            # print(subject_lecturer)
+            arr = []
+            for sl in remaining_subject_lecturers:
+                lect = Lecturer.objects.get(id = sl.lecturer_id)
+                json = {
+                    "id":lect.id,
+                    "name":lect.name
+                }
+                arr.append(json)
             return Response({
                  'message' : 'lecturer was deleted from subject successfully',
-                 'data' : {}
+                 'data' : arr
              },status=status.HTTP_200_OK)
         except Subject.DoesNotExist:
              return Response({
@@ -262,7 +321,12 @@ class DeleteLecturerFromSubject(generics.RetrieveAPIView):
              return Response({
                  'message' : 'lecturer not be found',
                  'data' : {}
-             },status=status.HTTP_404_NOT_FOUND)      
+             },status=status.HTTP_404_NOT_FOUND)   
+        except SubjectLecturer.DoesNotExist:
+             return Response({
+                 'message': 'Lecturer is not assigned to this subject',
+                 'data': {}
+             }, status=status.HTTP_404_NOT_FOUND)        
 
 
 class GetLecturerFromSubject(generics.RetrieveAPIView):

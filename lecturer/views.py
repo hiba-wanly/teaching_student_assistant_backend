@@ -68,8 +68,19 @@ class LoginView(ObtainAuthToken):
 class LogoutView(APIView):
     def post(self, request , format=None):
         request.auth.delete()
-        return Response({},status=status.HTTP_200_OK)
-        
+        response_data = {
+            "user_id": "",
+            "lecturer_id": "",
+            "username": "",
+            "email": "",
+            "name": "",
+        }
+        return Response({
+            "user" : response_data,
+            "token": "",
+            "message":"account logout successfully"
+        },status=status.HTTP_200_OK)
+    
  
 
 
