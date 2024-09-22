@@ -1,0 +1,47 @@
+- name: Deploy Docker Compose project
+  hosts: myservers
+  become: yes
+
+  vars_files:
+    - vault.yml
+
+  tasks:
+    - name: Create directory for the Docker Compose project
+      file:
+        path: /repos/teaching-assistant
+        state: directory
+        mode: '0755'
+
+    - name: Check if repository is already cloned
+      stat:
+        path: /repos/teaching-assistant/.git
+      register: repo_check
+
+    - name: Clone repository
+      git:
+        repo: "https://{{ gitlab_username }}:{{ gitlab_token }}@https://gitlab.com/mrkubaisi/teaching-assistant.git"
+        dest: /repos/teaching-assistant
+        version: main
+        force: yes
+      when: not repo_check.stat.exists
+
+    - name: Check if repository is cloned again after clone
+      stat:
+        path: /repos/teaching-assistant/.git
+      register: repo_check_after_clone
+
+    - name: Pull latest changes if repository exists
+      command: git pull
+      args:
+        chdir: /repos/teaching-assistant
+      when: repo_check_after_clone.stat.exists
+
+    - name: Stop and remove existing containers
+      command: docker compose -f "docker-compose.prod.yml" down
+      args:
+        chdir: /home/sighub/list-manager
+
+    - name: Build and start containers
+      command: docker compose -f "docker-compose.yml" up -d --build
+      args:
+        chdir: /repos/teaching-assistant
