@@ -1,2 +1,2 @@
-ansible command = ansible-playbook -i playbooks/inventory playbooks/deploy_docker.yml --ask-vault-pass
+ansible command = ansible-playbook -i playbooks/inventory playbooks/deploy_docker.yml --ask-vault-pass -vvvv
 ansible vault pass = Ans1bl3

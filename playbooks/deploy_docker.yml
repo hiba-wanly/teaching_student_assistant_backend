@@ -19,7 +19,7 @@
 
     - name: Clone repository
       git:
-        repo: "https://{{ gitlab_username }}:{{ gitlab_token }}@https://gitlab.com/mrkubaisi/teaching-assistant.git"
+        repo: "https://{{ gitlab_username }}:{{ gitlab_token }}@gitlab.com/mrkubaisi/teaching-assistant.git"
         dest: /repos/teaching-assistant
         version: main
         force: yes
