@@ -6,7 +6,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from .serializer import AttendanceSerializer , AttendanceLOGSerializer
 import datetime
-from .models import Attendance
+from .models import Attendance, AttendanceLOG
 from rest_framework import generics ,permissions
 from users.serializer import UserSerializer
 from users.permissions import IsLecturerUser,IsStudentUser
@@ -28,6 +28,8 @@ class AttendanceList(generics.RetrieveAPIView):
         serializer = AttendanceSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
+            attendance = Attendance.objects.filter(subject_id = request.data.get("subject"))
+            serializer = AttendanceSerializer(attendance, many= True)
             return Response({
                 'message' : 'Attendance was added successfully',
                 'data' : serializer.data
@@ -83,9 +85,12 @@ class AttendanceDetail(generics.RetrieveAPIView):
             },status=status.HTTP_404_NOT_FOUND)
     
     def delete(self, request , pk):
+        attendance = Attendance.objects.get(id = pk)
+        attendance = Attendance.objects.filter(subject_id = attendance.subject_id)
+        serializer = AttendanceSerializer(attendance, many= True)
         return Response({
                 'message' : 'can not delete Attendance',
-                'data' : {}
+                'data' : serializer.data
             },status=status.HTTP_200_OK)
         
         
@@ -116,10 +121,28 @@ class AttendanceLOGList(generics.RetrieveAPIView):
                 serializer.save()
         return Response({
                 'message' : 'Attendance log was added successfully',
-                # 'data' : serializer.data
+                'data' : {}
             },status=status.HTTP_200_OK)
         # return Response({
         #         'message' : 'missing fields',
         #         'data' : {}
         #     },status=status.HTTP_400_BAD_REQUEST)
     
+    
+class AttendanceLOGDetail(generics.RetrieveAPIView):
+    permission_classes = [permissions.IsAuthenticated&IsLecturerUser]   
+    serialzer_class=UserSerializer
+    
+    def get(self, request , pk):
+        try:
+            attendance_log = AttendanceLOG.objects.filter(attendance_id = pk)
+            serializer = AttendanceLOGSerializer(attendance_log,many= True)
+            return Response({
+                'message' : 'Attendance Log was get successfully',
+                'data' :  serializer.data
+            },status=status.HTTP_200_OK)
+        except Attendance.DoesNotExist:
+            return Response({
+                'message' : 'Attendance not be found',
+                'data' : {}
+            },status=status.HTTP_404_NOT_FOUND)   

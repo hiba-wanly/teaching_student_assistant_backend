@@ -89,16 +89,25 @@ class AllLecturer(generics.RetrieveAPIView):
     serialzer_class=UserSerializer
     
     def get(self, request):
-        lecturer = Lecturer.objects.all()
-        arr = []
-        for lect in lecturer:
-            json = {
-                "id":lect.id,
-                "name":lect.name
-            }
-            arr.append(json)
-        return Response({
-                'message' : 'get successfully',
-                'data' : arr
-            },status=status.HTTP_200_OK)   
-
+        user = request.user
+        try:
+            lecturer = user.lecturer
+            lecturer_idU = lecturer.id
+            lecturer = Lecturer.objects.all()
+            arr = []
+            for lect in lecturer:
+                if lect.id != lecturer_idU:
+                    json = {
+                        "id":lect.id,
+                        "name":lect.name
+                    }
+                    arr.append(json)
+            return Response({
+                    'message' : 'get successfully',
+                    'data' : arr
+                },status=status.HTTP_200_OK)   
+        except Lecturer.DoesNotExist:
+             return Response({
+                 'message' : 'lecturer not be found',
+                 'data' : {}
+             },status=status.HTTP_404_NOT_FOUND)
