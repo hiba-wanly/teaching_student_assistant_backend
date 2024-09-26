@@ -37,9 +37,9 @@
       when: repo_check_after_clone.stat.exists
 
     - name: Stop and remove existing containers
-      command: docker compose -f "docker-compose.prod.yml" down
+      command: docker compose -f "docker-compose.yml" down
       args:
-        chdir: /home/sighub/list-manager
+        chdir: /repos/teaching-assistant
 
     - name: Build and start containers
       command: docker compose -f "docker-compose.yml" up -d --build
