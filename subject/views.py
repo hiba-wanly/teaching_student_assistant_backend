@@ -396,6 +396,8 @@ class GetStudentsFromSubject(generics.RetrieveAPIView):
                         "father_name":stud.father_name
                     }
                     arr.append(json)
+            # Sorting the array by first_name
+            arr.sort(key=lambda x: x['first_name'])        
             return Response({
                  'message' : 'Student was get from subject successfully',
                  'data' : arr
