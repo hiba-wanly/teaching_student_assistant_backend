@@ -1,5 +1,7 @@
 from django.shortcuts import render
 from rest_framework.response import Response
+
+from student.models import Student, StudentSubject
 from .serializer import SubjectSerializer
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
@@ -233,7 +235,10 @@ class AddLecturerToSubject(generics.RetrieveAPIView):
     def post(self, request):
         subject_id = request.data.get('subject')
         lecturer_id = request.data.get('lecturer')
+        user = request.user
         try:
+            lecturer = user.lecturer
+            lecturer_idU = lecturer.id
             lecturer = Lecturer.objects.get(id = lecturer_id)
             subject = Subject.objects.get(id = subject_id)
             # Check if the lecturer is already assigned to the subject
@@ -253,12 +258,13 @@ class AddLecturerToSubject(generics.RetrieveAPIView):
             # print(subject_lecturer)
             arr = []
             for sl in remaining_subject_lecturers:
-                lect = Lecturer.objects.get(id = sl.lecturer_id)
-                json = {
-                    "id":lect.id,
-                    "name":lect.name
-                }
-                arr.append(json)
+                if sl.lecturer_id != lecturer_idU:
+                    lect = Lecturer.objects.get(id = sl.lecturer_id)
+                    json = {
+                        "id":lect.id,
+                        "name":lect.name
+                    }
+                    arr.append(json)
             return Response({
                  'message' : 'lecturer was added to subject successfully',
                  'data' : arr
@@ -288,7 +294,10 @@ class DeleteLecturerFromSubject(generics.RetrieveAPIView):
     def delete(self, request, subject ,lecturer):
         subject_id = subject
         lecturer_id = lecturer  
+        user = request.user
         try:
+            lecturer = user.lecturer
+            lecturer_idU = lecturer.id
             lecturer = Lecturer.objects.get(id = lecturer_id)
             subject = Subject.objects.get(id = subject_id)
             subject_lecturer = SubjectLecturer.objects.get(
@@ -302,12 +311,13 @@ class DeleteLecturerFromSubject(generics.RetrieveAPIView):
             # print(subject_lecturer)
             arr = []
             for sl in remaining_subject_lecturers:
-                lect = Lecturer.objects.get(id = sl.lecturer_id)
-                json = {
-                    "id":lect.id,
-                    "name":lect.name
-                }
-                arr.append(json)
+                if sl.lecturer_id != lecturer_idU:
+                    lect = Lecturer.objects.get(id = sl.lecturer_id)
+                    json = {
+                        "id":lect.id,
+                        "name":lect.name
+                    }
+                    arr.append(json)
             return Response({
                  'message' : 'lecturer was deleted from subject successfully',
                  'data' : arr
@@ -335,7 +345,10 @@ class GetLecturerFromSubject(generics.RetrieveAPIView):
     
     def get(self, request, pk):
         subject_id = pk
+        user = request.user
         try:
+            lecturer = user.lecturer
+            lecturer_idU = lecturer.id
             subject = Subject.objects.get(id = subject_id)
             subject_lecturer = SubjectLecturer.objects.filter(
                 subject = subject
@@ -343,12 +356,13 @@ class GetLecturerFromSubject(generics.RetrieveAPIView):
             print(subject_lecturer)
             arr = []
             for sl in subject_lecturer:
-                lect = Lecturer.objects.get(id = sl.lecturer_id)
-                json = {
-                    "id":lect.id,
-                    "name":lect.name
-                }
-                arr.append(json)
+                if sl.lecturer_id != lecturer_idU:
+                    lect = Lecturer.objects.get(id = sl.lecturer_id)
+                    json = {
+                        "id":lect.id,
+                        "name":lect.name
+                    }
+                    arr.append(json)
             return Response({
                  'message' : 'lecturer was get from subject successfully',
                  'data' : arr
@@ -360,4 +374,38 @@ class GetLecturerFromSubject(generics.RetrieveAPIView):
              },status=status.HTTP_404_NOT_FOUND)    
       
 
+class GetStudentsFromSubject(generics.RetrieveAPIView):
+    permission_classes = [permissions.IsAuthenticated&IsLecturerUser]   
+    serialzer_class=UserSerializer
+    
+    def get(self, request, pk):
+        subject_id = pk
+        user = request.user
+        try:
+            subject = Subject.objects.get(id = subject_id)
+            subject_student = StudentSubject.objects.filter(
+                subject = subject
+            )
+            arr = []
+            for sl in subject_student:
+                    stud = Student.objects.get(id = sl.student_id)
+                    json = {
+                        "id":stud.id,
+                        "first_name":stud.first_name,
+                        "last_name":stud.last_name,
+                        "father_name":stud.father_name
+                    }
+                    arr.append(json)
+            # Sorting the array by first_name
+            arr.sort(key=lambda x: x['first_name'])        
+            return Response({
+                 'message' : 'Student was get from subject successfully',
+                 'data' : arr
+             },status=status.HTTP_200_OK)
+        except Subject.DoesNotExist:
+             return Response({
+                 'message' : 'subject not be found',
+                 'data' : {}
+             },status=status.HTTP_404_NOT_FOUND)    
+      
 
