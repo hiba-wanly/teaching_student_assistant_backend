@@ -8,7 +8,7 @@ from users.models import Users
 # Create your models here.
 class Lecturer(models.Model):
     user = models.OneToOneField(Users , related_name="lecturer", on_delete=models.CASCADE)
-    name = models.CharField(max_length = 50,null= True , blank=True)
+    name = models.CharField(unique=True, max_length = 50,null= True , blank=True)
     # email = models.EmailField(unique = True,null= True , blank=True)
     # password = models.CharField(max_length = 250 ,null= True , blank=True)
     salt = models.TextField(blank=True,null=True)
