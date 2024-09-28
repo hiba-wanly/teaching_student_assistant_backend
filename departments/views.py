@@ -6,7 +6,6 @@ from django.forms.models import model_to_dict
 from .models import Departments
 from rest_framework.views import APIView
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
 
 
 # Create your views here.

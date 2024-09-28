@@ -9,7 +9,7 @@ import datetime
 from .models import Attendance, AttendanceLOG
 from rest_framework import generics ,permissions
 from users.serializer import UserSerializer
-from users.permissions import IsLecturerUser,IsStudentUser
+from users.permissions import IsLecturerUser,IsStudentUser, IsLecturerOrStudent
 
 # Create your views here.
 class AttendanceList(generics.RetrieveAPIView):
@@ -96,7 +96,7 @@ class AttendanceDetail(generics.RetrieveAPIView):
         
         
 class AttendanceSubjectList(generics.RetrieveAPIView):
-    permission_classes = [permissions.IsAuthenticated&IsLecturerUser]   
+    permission_classes = [permissions.IsAuthenticated&IsLecturerOrStudent]   
     serialzer_class=UserSerializer
     
     def get(self, request, pk):
@@ -118,7 +118,11 @@ class AttendanceLOGList(generics.RetrieveAPIView):
         for item_data in items:
             serializer = AttendanceLOGSerializer(data=item_data)
             if serializer.is_valid():
-                serializer.save()
+                try:
+                    get_old = AttendanceLOG.objects.get(attendance =item_data.get('attendance') ,student = item_data.get('student') )
+                    # if get_old:
+                except AttendanceLOG.DoesNotExist:         
+                    serializer.save()
         return Response({
                 'message' : 'Attendance log was added successfully',
                 'data' : {}
@@ -141,8 +145,55 @@ class AttendanceLOGDetail(generics.RetrieveAPIView):
                 'message' : 'Attendance Log was get successfully',
                 'data' :  serializer.data
             },status=status.HTTP_200_OK)
-        except Attendance.DoesNotExist:
+        except AttendanceLOG.DoesNotExist:
             return Response({
                 'message' : 'Attendance not be found',
                 'data' : {}
             },status=status.HTTP_404_NOT_FOUND)   
+            
+            
+class AttendanceLOGToStudentDetail(generics.RetrieveAPIView):
+    permission_classes = [permissions.IsAuthenticated&IsStudentUser]   
+    serialzer_class=UserSerializer  
+    
+    def get(self, request , pk):
+        user = request.user
+        try:
+            student = user.student
+            student_id = student.id
+            data = [] 
+            attendance = Attendance.objects.filter(subject_id = pk)
+            for att in attendance:
+                try:
+                    attendance_log = AttendanceLOG.objects.get(attendance_id = att.id,student_id= student_id )
+                    d = {
+                        "id": att.id,
+                        "date": att.date,
+                        "day": att.day,
+                        "type": att.type,
+                        "percentage": att.percentage,
+                        "subject": att.subject_id,
+                        "status":attendance_log.status
+                    }
+                    data.append(d)
+                except AttendanceLOG.DoesNotExist:
+                    d = {
+                        "id": att.id,
+                        "date": att.date,
+                        "day": att.day,
+                        "type": att.type,
+                        "percentage": att.percentage,
+                        "subject": att.subject_id,
+                        "status":""
+                    }
+                    data.append(d)
+            # serializer = AttendanceLOGSerializer(attendance_log)
+            return Response({
+                'message' : 'Attendance Log was get successfully',
+                'data' :  data
+            },status=status.HTTP_200_OK)
+        except Attendance.DoesNotExist:
+            return Response({
+                'message' : 'Attendance not be found',
+                'data' : {}
+            },status=status.HTTP_404_NOT_FOUND)          
