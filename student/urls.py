@@ -8,4 +8,7 @@ urlpatterns = [
     path('login',views.StudentLoginView.as_view()),
     path('register',views.StudentRegisterView.as_view()),
     path('logout',views.LogoutView.as_view()),
+    path('mysubject',views.MySubjectView.as_view()),
+    path('deletesubjectstudent/<int:pk>',views.DeleteStudentSubjectList.as_view()),
 ]
+

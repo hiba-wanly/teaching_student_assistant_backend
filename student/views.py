@@ -20,8 +20,8 @@ from users.serializer import UserSerializer
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from users.permissions import IsLecturerUser,IsStudentUser
-
-
+from .models import StudentSubject
+from subject.serializer import SubjectSerializer
 # Create your views here.
 class StudentLoginView(ObtainAuthToken):
     def post( self, request , *args, **kwargs):
@@ -102,26 +102,38 @@ class AddStudentSubjectList(generics.RetrieveAPIView):
                     'message' : 'missing files',
                     'data' : {}
                 },status=status.HTTP_400_BAD_REQUEST) 
-                data = StudentSubjectInfo.objects.create(
-                    student= student,
-                    subject = subject,
-                    status = status1,
-                    year = year,
-                    semester = semester,
-                    academic_year = academic_year
-                )
-                data2 = StudentSubject.objects.create(
+                try:
+                    get_old = StudentSubject.objects.get(
                     student =student,
                     subject = subject
-                )
-                if exam_number:
-                    data.exam_number =exam_number
-                    data.save()
-                serialzer =   StudentSubjectInfoSerializer(data).data  
-                return Response({
-                    'message' : 'student subject was added successfully',
-                    'data' : serialzer
-                },status=status.HTTP_200_OK) 
+                    )   
+                    if get_old:
+                          return Response({
+                        'message' : 'you are already in this subject',
+                        'data' : {}
+                    },status=status.HTTP_400_BAD_REQUEST) 
+                except StudentSubject.DoesNotExist:
+      
+                    data = StudentSubjectInfo.objects.create(
+                        student= student,
+                        subject = subject,
+                        status = status1,
+                        year = year,
+                        semester = semester,
+                        academic_year = academic_year
+                    )
+                    data2 = StudentSubject.objects.create(
+                        student =student,
+                        subject = subject
+                    )
+                    if exam_number:
+                        data.exam_number =exam_number
+                        data.save()
+                    serialzer =   StudentSubjectInfoSerializer(data).data  
+                    return Response({
+                        'message' : 'student subject was added successfully',
+                        'data' : serialzer
+                    },status=status.HTTP_200_OK) 
             except Subject.DoesNotExist:
                  return Response({
                      'message' : 'subject not be found',
@@ -206,9 +218,67 @@ class StudentInfoList(generics.RetrieveAPIView):
 class LogoutView(APIView):
     def post(self, request , format=None):
         request.auth.delete()
-        return Response({},status=status.HTTP_200_OK)
+        response_data = {
+            "user_id": "",
+            "lecturer_id": "",
+            "username": "",
+            "email": "",
+            "name": "",
+        }
+        return Response({
+            "user" : response_data,
+            "token": "",
+            "message":"account logout successfully"
+        },status=status.HTTP_200_OK)
 
 
+class MySubjectView(generics.RetrieveAPIView):
+    permission_classes = [permissions.IsAuthenticated&IsStudentUser]   
+    serialzer_class=UserSerializer
+    
+    def get(self, request):
+        user = request.user
+        try:
+            student = user.student
+            student_id = student.id
+            subject_student_ids = StudentSubject.objects.filter(student  = student_id)
+            subject = Subject.objects.filter(id__in = subject_student_ids.values_list('subject_id',flat=True) )
+            serializer = SubjectSerializer(subject, many=True)
+            return Response({
+                    'message' : 'subject get successfully',
+                    'data' : serializer.data
+                },status=status.HTTP_200_OK)
+        except Student.DoesNotExist:
+                 return Response({
+                     "error": "Student not found."
+                 },status=status.HTTP_404_NOT_FOUND)     
+            
+
+class DeleteStudentSubjectList(generics.RetrieveAPIView):
+    permission_classes = [permissions.IsAuthenticated&IsStudentUser]   
+    serialzer_class=UserSerializer
+    
+    def delete(self, request , pk):  
+        user = request.user
+        try:
+             student = user.student
+             student_id = student.id
+             subject = Subject.objects.get(id = pk)
+             student = Student.objects.get(id = student_id)
+             subject_student = StudentSubject.objects.get(subject  = subject, student=student)
+             subject_student.delete()
+             subject_student_ids = StudentSubject.objects.filter(student  = student_id)
+             subject = Subject.objects.filter(id__in = subject_student_ids.values_list('subject_id',flat=True) )
+             serializer = SubjectSerializer(subject, many=True)
+             return Response({
+                 'message' : 'subject was deleted successfully',
+                 'data' : serializer.data
+             },status=status.HTTP_200_OK)
+        except Subject.DoesNotExist:
+             return Response({
+                 'message' : 'subject not be found',
+                 'data' : {}
+             },status=status.HTTP_404_NOT_FOUND)
 
 
 
