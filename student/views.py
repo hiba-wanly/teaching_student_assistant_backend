@@ -22,6 +22,13 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from users.permissions import IsLecturerUser,IsStudentUser
 from .models import StudentSubject
 from subject.serializer import SubjectSerializer
+from activity.models import ActivityLOG
+from attendance.models import AttendanceLOG
+from homework.models import HomeworkLOG
+from interview.models import InterviewLOG
+from labs.models import LabsLOG
+from tests.models import TestsLOG
+
 # Create your views here.
 class StudentLoginView(ObtainAuthToken):
     def post( self, request , *args, **kwargs):
@@ -263,9 +270,26 @@ class DeleteStudentSubjectList(generics.RetrieveAPIView):
         try:
              student = user.student
              student_id = student.id
-             subject = Subject.objects.get(id = pk)
+             subject_id = Subject.objects.get(id = pk)
              student = Student.objects.get(id = student_id)
-             subject_student = StudentSubject.objects.get(subject  = subject, student=student)
+             
+             subject_student = StudentSubject.objects.get(subject  = subject_id, student=student)
+             subject_student_ids = StudentSubject.objects.filter(student  = student_id)
+             subject = Subject.objects.filter(id__in = subject_student_ids.values_list('subject_id',flat=True) )
+             serializer = SubjectSerializer(subject, many=True)
+             logs_exist = ( ActivityLOG.objects.filter(student_id=student_id, subject_id = subject_id).exists() or 
+                           AttendanceLOG.objects.filter(student_id=student_id , subject_id = subject_id).exists() or 
+                           HomeworkLOG.objects.filter(student_id=student_id, subject_id = subject_id).exists() or 
+                           InterviewLOG.objects.filter(student_id=student_id, subject_id = subject_id).exists() or 
+                           LabsLOG.objects.filter(student_id=student_id, subject_id = subject_id).exists() or 
+                           TestsLOG.objects.filter(student_id=student_id, subject_id = subject_id).exists() 
+             )
+             if logs_exist:
+                return Response({
+                 'message' : 'Cannot delete subject. Logs exist.',
+                 'data' : serializer.data
+                },status=status.HTTP_400_BAD_REQUEST)                 
+                
              subject_student.delete()
              subject_student_ids = StudentSubject.objects.filter(student  = student_id)
              subject = Subject.objects.filter(id__in = subject_student_ids.values_list('subject_id',flat=True) )

@@ -7,7 +7,7 @@ from users.models import Users
 
 # Create your models here.
 class Student(models.Model):
-    user = models.OneToOneField(Users , related_name="student", on_delete=models.CASCADE)
+    user = models.OneToOneField(Users , related_name="student", on_delete=models.PROTECT)
     first_name = models.CharField(max_length = 50,null= True , blank=True)
     last_name = models.CharField(max_length = 50,null= True , blank=True)
     father_name = models.CharField(max_length = 50,null= True , blank=True)
@@ -22,7 +22,7 @@ class Student(models.Model):
     
 class StudentInfo(models.Model):
     student = models.ForeignKey(Student, on_delete = models.PROTECT)
-    academic_year = models.CharField(max_length = 50,null= True , blank=True)
+    academic_year = models.IntegerField(null= True , blank=True)
     exam_number = models.IntegerField(null= True , blank=True)
 
 class StudentSubject(models.Model):

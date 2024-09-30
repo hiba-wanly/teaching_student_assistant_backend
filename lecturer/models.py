@@ -7,7 +7,7 @@ from users.models import Users
 
 # Create your models here.
 class Lecturer(models.Model):
-    user = models.OneToOneField(Users , related_name="lecturer", on_delete=models.CASCADE)
+    user = models.OneToOneField(Users , related_name="lecturer", on_delete=models.PROTECT)
     name = models.CharField(unique=True, max_length = 50,null= True , blank=True)
     # email = models.EmailField(unique = True,null= True , blank=True)
     # password = models.CharField(max_length = 250 ,null= True , blank=True)
@@ -21,4 +21,4 @@ class Lecturer(models.Model):
 
 class SubjectLecturer(models.Model):
     lecturer = models.ForeignKey(Lecturer, on_delete = models.PROTECT)
-    subject = models.ForeignKey(Subject, on_delete = models.CASCADE)   
+    subject = models.ForeignKey(Subject, on_delete = models.PROTECT)   

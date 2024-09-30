@@ -1,7 +1,14 @@
 from django.shortcuts import render
 from rest_framework.response import Response
 
+from activity.models import Activity
+from attendance.models import Attendance
+from files.models import Files
+from homework.models import Homework
+from interview.models import Interview
+from labs.models import Labs
 from student.models import Student, StudentSubject
+from tests.models import Tests
 from .serializer import SubjectSerializer
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
@@ -18,6 +25,7 @@ from departments.models import Departments
 from rest_framework import generics ,permissions
 from users.serializer import UserSerializer
 from users.permissions import IsLecturerUser,IsStudentUser
+from django.db.models.deletion import ProtectedError
 
 # Create your views here.
 class SubjectStudentList(APIView):
@@ -25,8 +33,9 @@ class SubjectStudentList(APIView):
         # year = request.data.get('year')
         # semester = request.data.get('semester')
         academic_year = request.data.get('academic_year')
+        department_id = request.data.get('department_id')
         info_gen = GeneralInformation.objects.get()
-        subject = Subject.objects.filter(year=info_gen.year,semester=info_gen.semester,academic_year=academic_year)
+        subject = Subject.objects.filter(year=info_gen.year,semester=info_gen.semester,academic_year=academic_year, departments_id=department_id)
         serializer = SubjectSerializer(subject, many=True)
         return Response({
                 'message' : 'subject get successfully',
@@ -69,6 +78,8 @@ class SubjectList(generics.RetrieveAPIView):
             interviews_mark = request.data.get('interviews_mark')
             homework_mark  = request.data.get('homework_mark')
             labs_mark  = request.data.get('labs_mark')
+            total_mark  = request.data.get('total_mark')
+            practical_mark  = request.data.get('practical_mark')
             serializer = SubjectSerializer(data=request.data)
             info_gen = GeneralInformation.objects.get()
             year=info_gen.year
@@ -97,6 +108,10 @@ class SubjectList(generics.RetrieveAPIView):
                         subject.homework_mark = homework_mark  
                     if labs_mark:
                         subject.labs_mark = labs_mark 
+                    if total_mark:
+                        subject.total_mark = total_mark  
+                    if practical_mark:
+                        subject.practical_mark = practical_mark     
                     subject.save()
                     ## i want to change it to return subject to lecturer
                     subject_lecturer_ids = SubjectLecturer.objects.filter(lecturer  = lecturer_id)
@@ -155,6 +170,8 @@ class SubjectDetail(generics.RetrieveAPIView):
             interviews_mark = request.data.get('interviews_mark')
             homework_mark  = request.data.get('homework_mark')
             labs_mark  = request.data.get('labs_mark')
+            total_mark  = request.data.get('total_mark')
+            practical_mark  = request.data.get('practical_mark')
          
             if subject_name:
                 subject.subject_name = subject_name
@@ -183,6 +200,10 @@ class SubjectDetail(generics.RetrieveAPIView):
                 subject.homework_mark = homework_mark  
             if labs_mark:
                 subject.labs_mark = labs_mark
+            if total_mark:
+                subject.total_mark = total_mark  
+            if practical_mark:
+                subject.practical_mark = practical_mark    
             
             subject.save()
             # serializer = SubjectSerializer(subject).data
@@ -208,8 +229,33 @@ class SubjectDetail(generics.RetrieveAPIView):
         try:
              lecturer = user.lecturer
              lecturer_id = lecturer.id
-             subject = Subject.objects.get(id = pk)
+             subject_id = Subject.objects.get(id = pk)
+             subject_lecturer_ids = SubjectLecturer.objects.filter(lecturer  = lecturer_id)
+             print(subject_lecturer_ids)
+             subject = Subject.objects.filter(id__in = subject_lecturer_ids.values_list('subject_id',flat=True) )
+             serializer = SubjectSerializer(subject, many=True)
+             sub_lec = SubjectLecturer.objects.get(subject  = subject_id,lecturer  = lecturer_id)
+             logs_exist = (
+                 Activity.objects.filter( subject_id = subject_id)[:1].exists() or 
+                           Attendance.objects.filter(subject_id = subject_id)[:1].exists() or 
+                           Homework.objects.filter( subject_id = subject_id)[:1].exists() or 
+                           Interview.objects.filter( subject_id = subject_id)[:1].exists() or 
+                           Labs.objects.filter( subject_id = subject_id)[:1].exists() or 
+                           Tests.objects.filter( subject_id = subject_id)[:1].exists() or
+                           Files.objects.filter( subject_id = subject_id)[:1].exists() or
+                            StudentSubject.objects.filter( subject_id = subject_id)[:1].exists()  
+                            # SubjectLecturer.objects.filter(subject=subject_id)[:1].exists()
+             )
+             if logs_exist:
+                return Response({
+                 'message' : 'Cannot delete subject. Logs exist.',
+                 'data' : serializer.data
+                },status=status.HTTP_400_BAD_REQUEST)  
+            
              subject.delete()
+             sub_lec.delete()
+             
+             
              ## i want to change it to return subject to lecturer
              subject_lecturer_ids = SubjectLecturer.objects.filter(lecturer  = lecturer_id)
              print(subject_lecturer_ids)
@@ -225,6 +271,11 @@ class SubjectDetail(generics.RetrieveAPIView):
                  'message' : 'subject not be found',
                  'data' : {}
              },status=status.HTTP_404_NOT_FOUND)
+        except ProtectedError:
+            return Response({
+                'message': 'Cannot delete subject due to protected references.',
+                'data': {}
+            }, status=400)     
 
 
 
@@ -363,6 +414,7 @@ class GetLecturerFromSubject(generics.RetrieveAPIView):
                         "name":lect.name
                     }
                     arr.append(json)
+            arr.sort(key=lambda x: x['name'])         
             return Response({
                  'message' : 'lecturer was get from subject successfully',
                  'data' : arr

@@ -11,3 +11,10 @@ class Tests(models.Model):
     # type = models.CharField(max_length = 50)
     percentage = models.FloatField(null= True , blank=True)
    
+
+
+class TestsLOG(models.Model):
+    tests = models.ForeignKey(Tests, on_delete = models.PROTECT)  
+    student = models.ForeignKey(Student, on_delete = models.PROTECT)      
+    mark = models.FloatField()   
+    subject = models.ForeignKey(Subject, on_delete = models.PROTECT,null= True , blank=True) 

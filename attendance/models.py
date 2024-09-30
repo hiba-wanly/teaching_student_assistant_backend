@@ -16,3 +16,4 @@ class AttendanceLOG(models.Model):
     attendance = models.ForeignKey(Attendance, on_delete = models.PROTECT)  
     student = models.ForeignKey(Student, on_delete = models.PROTECT)      
     status = models.CharField(max_length = 50) # attended , absent , late , reason
+    subject = models.ForeignKey(Subject, on_delete = models.PROTECT,null= True , blank=True) 
