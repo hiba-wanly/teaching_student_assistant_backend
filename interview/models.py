@@ -13,3 +13,9 @@ class Interview(models.Model):
 
 
      
+     
+class InterviewLOG(models.Model):
+    interview = models.ForeignKey(Interview, on_delete = models.PROTECT)  
+    student = models.ForeignKey(Student, on_delete = models.PROTECT)      
+    mark = models.FloatField()
+    subject = models.ForeignKey(Subject, on_delete = models.PROTECT,null= True , blank=True) 

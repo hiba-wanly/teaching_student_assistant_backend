@@ -4,9 +4,9 @@ from departments.models import Departments
 # Create your models here.
 class Subject(models.Model):
     subject_name = models.CharField(max_length = 50)
-    academic_year = models.CharField(max_length = 50)
+    academic_year = models.IntegerField()
     departments = models.ForeignKey(Departments, on_delete = models.PROTECT)
-    semester = models.CharField(max_length = 50,null= True , blank=True)
+    semester = models.IntegerField(null= True , blank=True)
     year = models.CharField(max_length = 50,null= True , blank=True)
     # major = models.CharField(max_length = 50,null= True , blank=True)
     tests_mark = models.IntegerField(null= True , blank=True)

@@ -102,6 +102,7 @@ class AllLecturer(generics.RetrieveAPIView):
                         "name":lect.name
                     }
                     arr.append(json)
+            arr.sort(key=lambda x: x['name']) 
             return Response({
                     'message' : 'get successfully',
                     'data' : arr
