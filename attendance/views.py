@@ -244,7 +244,7 @@ class AttendanceStudentLogDetail(generics.RetrieveAPIView):
             for sl in student:
                 stud = Student.objects.get(id = sl.student_id)
                 if AttendanceLOG.objects.filter(student_id=sl.student_id, attendance_id = att).exists():
-                    attLog = AttendanceLOG.objects.get(student_id=sl.student_id)
+                    attLog = AttendanceLOG.objects.get(student_id=sl.student_id, attendance_id = att)
                     json = {
                         "student_id":stud.id,
                         "first_name":stud.first_name,
