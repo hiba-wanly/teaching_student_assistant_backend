@@ -9,7 +9,7 @@ import datetime
 from .models import Files
 from rest_framework import generics ,permissions
 from users.serializer import UserSerializer
-from users.permissions import IsLecturerUser,IsStudentUser
+from users.permissions import IsLecturerUser,IsStudentUser, IsLecturerOrStudent
 
 # Create your views here.
 class FilesList(generics.RetrieveAPIView):
@@ -28,6 +28,8 @@ class FilesList(generics.RetrieveAPIView):
         serializer = FilesSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
+            files = Files.objects.filter(subject_id = request.data.get("subject"))
+            serializer = FilesSerializer(files, many= True)
             return Response({
                 'message' : 'Files was added successfully',
                 'data' : serializer.data
@@ -46,7 +48,7 @@ class FilesDetail(generics.RetrieveAPIView):
             files = Files.objects.get(id = pk)
             serializer = FilesSerializer(files)
             return Response({
-                'message' : 'Files was get successfully',
+                'message' : 'File was get successfully',
                 'data' :  serializer.data
             },status=status.HTTP_200_OK)
         except Files.DoesNotExist:
@@ -74,9 +76,11 @@ class FilesDetail(generics.RetrieveAPIView):
             if type:
                 files.type = type        
             files.save()
+            files2 = Files.objects.filter(subject_id = files.subject_id)
+            serializer = FilesSerializer(files2, many= True)
             return Response({
-                'message' : 'Files was edited successfully',
-                'data' : FilesSerializer(files).data
+                'message' : 'File was edited successfully',
+                'data' : serializer.data
             },status=status.HTTP_200_OK)
         except Files.DoesNotExist:
             return Response({
@@ -85,10 +89,20 @@ class FilesDetail(generics.RetrieveAPIView):
             },status=status.HTTP_404_NOT_FOUND)
     
     def delete(self, request , pk):
-        return Response({
-                'message' : 'can not delete Files',
+        try :
+            files = Files.objects.get(id = pk)
+            files2 = Files.objects.filter(subject_id = files.subject_id)
+            serializer = FilesSerializer(files2, many= True)
+            files.delete()
+            return Response({
+                    'message' : 'file was delete successfully',
+                    'data' : serializer.data
+                },status=status.HTTP_200_OK)
+        except Files.DoesNotExist:
+            return Response({
+                'message' : 'Files not be found',
                 'data' : {}
-            },status=status.HTTP_200_OK)
+            },status=status.HTTP_404_NOT_FOUND)    
         
     
         
